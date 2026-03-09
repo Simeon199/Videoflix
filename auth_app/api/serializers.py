@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
 class RegistrationSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -24,3 +25,16 @@ class RegistrationSerializer(serializers.Serializer):
             is_active=False
         )
         return user
+    
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        user = authenticate(username=data['email'], password=data['password'])
+        if user is None:
+            raise serializers.ValidationError("Ungültige Anmeldedaten.")
+        if not user.is_active:
+            raise serializers.ValidationError("Dieses Konto is noch nicht aktiviert.")
+        data['user'] = user
+        return data
