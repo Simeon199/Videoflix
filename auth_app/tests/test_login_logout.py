@@ -4,7 +4,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from auth_app.api.serializers import LoginSerializer
 
 LOGIN_URL = "/api/login/"
-LOGOUT_URL = "api/logout/"
+LOGOUT_URL = "/api/logout/"
+TOKEN_REFRESH_URL = "/api/token/refresh"
 
 @pytest.fixture
 def api_client():
@@ -238,3 +239,67 @@ class TestLogoutView:
         api_client.cookies["refresh_token"] = refresh_token
         response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 400
+
+# TokenRefreshView
+
+@pytest.mark.django_db
+class TokenRefreshView:
+    def _login(self, api_client, email, password):
+        response = api_client.post(
+            LOGIN_URL,
+            {
+                "email": email,
+                "password": password
+            },
+            format="json"
+        )
+        return response.cookies.get("refresh_token").value
+    
+    def test_successfull_refresh_status(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert response.status_code == 200
+
+    def test_successful_refresh_response_body(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert response.data["detail"] == "Token refreshed"
+        assert "access" in response.data
+
+    def test_new_access_cookie_is_set(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert "access_token" in response.cookies
+        assert response.cookies["access_token"].value != ""
+
+    def test_new_access_cookie_is_httponly(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert response.cookies["access_token"]["httponly"]
+
+    def test_refresh_without_cookie_returns_400(self, api_client):
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert response.status_code == 400
+        assert "Refresh-Token fehlt" in response.data["detail"]
+
+    def test_refresh_with_invalid_token_returns_401(self, api_client):
+        api_client.cookies["refresh_token"] = "this.is.not.a.valid.token"
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert response.status_code == 401
+        assert "Ungültiger Refresh-Token" in response.data["detail"]
+
+    def test_no_token_leakage_in_body(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert "access_token" not in response.data
+
+    def test_refresh_token_cookie_not_modified(self, api_client, active_user):
+        refresh_token = self._login(api_client, "active@example.com", "securePass123!")
+        api_client.cookies["refresh_token"] = refresh_token
+        response = api_client.post(TOKEN_REFRESH_URL, format="json")
+        assert "refresh_token" not in response.cookies
