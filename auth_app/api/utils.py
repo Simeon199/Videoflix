@@ -17,7 +17,7 @@ def send_activation_email(user, uidb64, token):
 
 def send_password_reset_email(user, uidb64, token):
     reset_link = (
-        f"{settings.DOMAIN}/api/password_reset_confirm/{uidb64}/{token}/"
+        f"{settings.DOMAIN}/api/password_confirm/{uidb64}/{token}/"
     )
     subject = 'Passwort zurücksetzen - Videoflix'
     body = (
