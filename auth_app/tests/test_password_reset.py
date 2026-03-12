@@ -68,3 +68,50 @@ class TestPasswordResetConfirmSerializer:
         serializer = PasswordResetConfirmSerializer(data={"new_password": "newSecure123!"})
         assert not serializer.is_valid()
         assert "confirm_password" in serializer.errors
+
+# PasswordResetView
+
+@pytest.mark.django_db
+class TestPasswordResetView:
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_returns_200_for_existing_user(self, mock_send_email, api_client, create_user):
+        create_user(email="reset@example.com", is_active=True)
+        response = api_client.post(PASSWORD_RESET_URL, {"email": "reset@example.com"}, format="json")
+        assert response.status_code == 200
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_correct_response_body(self, mock_send_email, api_client, create_user):
+        create_user(email="reset@example.com", is_active=True)
+        response = api_client.post(PASSWORD_RESET_URL, {"email": "reset@example.com"}, format="json")
+        assert response.data["detail"] == "An email has been sent to reset your password."
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_email_sent_for_existing_user(self, mock_send_email, api_client, create_user):
+        create_user(email="reset@example.com", is_active=True)
+        api_client.post(PASSWORD_RESET_URL, {"email": "reset@example.com"}, format="json")
+        mock_send_email.assert_called_once
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_returns_200_for_nonexistent_user(self, mock_send_email, api_client):
+        response = api_client.post(PASSWORD_RESET_URL, {"email": "ghost@example.com"}, format="json")
+        assert response.status_code == 200
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_no_email_sent_for_nonexistent_user(self, mock_send_email, api_client):
+        api_client.post(PASSWORD_RESET_URL, {"email": "ghost@example.com"}, format="json")
+        mock_send_email.assert_not_called()
+
+    @patch("auth_app.api.views.send_password_reset_email")
+    def test_no_email_sent_for_inactive_user(self, mock_send_email, api_client, create_user):
+        create_user(email="inactive@example.com", is_active=False)
+        api_client.post(PASSWORD_RESET_URL, {"email": "inactive@example.com"}, format="json")
+        mock_send_email.assert_not_called()
+
+    def test_invalid_email_format_returns_400(self, api_client):
+        response = api_client.post(PASSWORD_RESET_URL, {"email": "not-at-sign"}, format="json")
+        assert response.status_code == 400
+
+    def test_missing_email_returns_400(self, api_client):
+        response = api_client.post(PASSWORD_RESET_URL, {}, format="json")
+        assert response.status_code == 400
