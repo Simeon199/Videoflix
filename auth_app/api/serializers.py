@@ -38,3 +38,21 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Dieses Konto is noch nicht aktiviert.")
         data['user'] = user
         return data
+    
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value, is_active=True).exists():
+            # Aus Sicherheitsgründen keinen Hinweis geben, ob die Email existiert (HTTP 200 immer).
+            pass
+        return value  
+    
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True)
+    confirmed_new_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirmed_new_password']:
+            raise serializers.ValidationError("Die Passwörter stimmen nicht überein.")
+        return data
