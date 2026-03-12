@@ -37,3 +37,34 @@ class TestPasswordResetSerializer:
         serializer = PasswordResetSerializer(data={"email": "not-an-email"})
         assert not serializer.is_valid()
         assert "email" in serializer.errors
+
+# PasswordResetConfirmSerializer
+
+class TestPasswordResetConfirmSerializer:
+
+    def test_matching_passwords(self):
+        data = {
+            "new_password": "newSecure123!",
+            "confirm_password": "newSecure123!"
+        }
+        serializer = PasswordResetConfirmSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors
+
+    def test_mismatched_passwords(self):
+        data = {
+            "new_password": "newSecure123!",
+            "confirm_password": "different456!"
+        }
+        serializer = PasswordResetConfirmSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+    
+    def test_missing_new_password(self):
+        serializer = PasswordResetConfirmSerializer(data={"confirm_password": "newSecure123!"})
+        assert not serializer.is_valid()
+        assert "new_password" in serializer.errors
+
+    def test_missing_confirm_password(self):
+        serializer = PasswordResetConfirmSerializer(data={"new_password": "newSecure123!"})
+        assert not serializer.is_valid()
+        assert "confirm_password" in serializer.errors
