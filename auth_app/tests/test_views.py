@@ -96,7 +96,7 @@ class TestActivationView:
         response = api_client.get(url)
 
         assert response.status_code == 200
-        assert response.data["message"] == "Account successfully activated"
+        assert response.data["message"] == "Account successfully activated."
 
         user.refresh_from_db()
         assert user.is_active is True

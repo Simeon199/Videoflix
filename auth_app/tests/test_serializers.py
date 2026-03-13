@@ -42,7 +42,7 @@ class TestRegistrationSerializer:
     def test_duplicate_email(self, create_user):
         create_user(email="existing@example.com")
         data = {
-            "email": "new@example.com",
+            "email": "existing@example.com",
             "password": "securePass123!",
             "confirmed_password": "securePass123!",
         }

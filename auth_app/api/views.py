@@ -42,6 +42,12 @@ class ActivationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        if user.is_active:
+            return Response(
+                {'error': 'Aktivierung fehlgeschlagen.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if default_token_generator.check_token(user, token):
             user.is_active = True
             user.save()
@@ -49,7 +55,7 @@ class ActivationView(APIView):
                 {'message': 'Account successfully activated.'},
                 status=status.HTTP_200_OK
             )
-        
+
         return Response(
             {'error': 'Aktivierung fehlgeschlagen.'},
             status=status.HTTP_400_BAD_REQUEST

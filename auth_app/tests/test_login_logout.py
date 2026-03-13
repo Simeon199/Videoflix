@@ -107,8 +107,8 @@ class TestLoginView:
             format="json"
         )
         assert response.data["detail"] == "Login successful"
-        assert response["user"]["id"] == active_user.id
-        assert response["user"]["username"] == active_user.username
+        assert response.data["user"]["id"] == active_user.id
+        assert response.data["user"]["username"] == active_user.username
 
     def test_access_cookie_set(self, api_client, active_user):
         response = api_client.post(
@@ -223,16 +223,16 @@ class TestLogoutView:
         assert "Refresh-Token fehlt" in response.data["detail"]
 
     def test_logout_with_invalid_token_returns_400(self, api_client):
-        api_client.cookies["refresh_token"] == "this.is.not.a.valid.token"
+        api_client.cookies["refresh_token"] = "this.is.not.a.valid.token"
         response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 400
 
     def test_token_blacklisted_after_logout(self, api_client, active_user):
         refresh_token = self._login(api_client, "active@example.com", "securePass123!")
-        api_client.cookies["refresh_token"] == refresh_token
+        api_client.cookies["refresh_token"] = refresh_token
 
         # Erster Logout - erfolgreich
-        response = api_client.post(LOGIN_URL, format="json")
+        response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 200
 
         # Zweiter Logout mit demselben Token - muss fehlschlagen
