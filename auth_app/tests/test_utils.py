@@ -2,11 +2,27 @@ import pytest
 from unittest.mock import patch, MagicMock
 from auth_app.api.utils import send_activation_email
 
+"""
+Test module for utility functions.
+
+This module contains tests for authentication utility functions:
+- send_activation_email function for user account activation
+
+Tests cover email sending functionality, proper email content generation,
+and activation link construction.
+"""
+
 @pytest.mark.django_db
 class TestSendActivationEmail:
+    """
+    Test class for send_activation_email utility function.
+    """
 
     @patch("auth_app.api.utils.EmailMessage")
     def test_email_is_sent(self, MockEmailMessage, create_user, settings):
+        """
+        Test that activation email is sent with correct parameters.
+        """
         settings.DOMAIN = "http://testserver"
         settings.DEFAULT_FROM_EMAIL = "noreply@videoflix.de"
         
@@ -24,6 +40,9 @@ class TestSendActivationEmail:
 
     @patch("auth_app.api.utils.EmailMessage")
     def test_activation_link_in_body(self, MockEmailMessage, create_user, settings):
+        """
+        Test that activation link is correctly included in email body.
+        """
         settings.DOMAIN = "http://testserver"
         settings.DEFAULT_FROM_EMAIL = "noreply@videoflix.de"
 
