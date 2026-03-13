@@ -115,3 +115,89 @@ class TestPasswordResetView:
     def test_missing_email_returns_400(self, api_client):
         response = api_client.post(PASSWORD_RESET_URL, {}, format="json")
         assert response.status_code == 400
+
+# PasswordResetConfirmView
+
+@pytest.mark.django_db
+class TestPasswordResetConfirmView:
+    
+    def test_successful_password_reset(self, api_client, create_user):
+        user = create_user(email="confirm@example.com", is_active=True)
+        url, _ = _build_confirm_url(user)
+
+        response = api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+
+        assert response.status_code == 200
+        assert "detail" in response.data
+
+    def test_password_is_actually_changed(self, api_client, create_user):
+        user = create_user(email="changed@example.com", password="oldPass123!", is_active=True)
+        url, _ = _build_confirm_url(user)
+
+        api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+
+        user.refresh_from_db()
+        assert user.check_password("brandNew456!")
+        assert not user.check_password("oldPass123!")
+
+    def test_invalid_uidb64_returns_400(self, api_client):
+        url = "/api/password_confirm/invalid-uid/some-token/"
+        response = api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+        assert response.status_code == 400
+
+    def test_nonexistent_user_returns_400(self, api_client):
+        uidb64 = urlsafe_base64_encode(force_bytes(99999))
+        url = f"/api/password_confirm/{uidb64}/some-token/"
+        response = api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+        assert response.status_code == 400
+
+    def test_invalid_token_returns_400(self, api_client, create_user):
+        user = create_user(email="badtoken@example.com", is_active=True)
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        url = f"/api/password_confirm/{uidb64}/invalid_token/"
+
+        response = api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+        assert response.status_code == 400
+
+    def test_mismatched_passwords_returns_400(self, api_client, create_user):
+        user = create_user(email="mismatch@example.com", is_active=True)
+        url, _ = _build_confirm_url(user)
+
+        response = api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "different789!"
+        }, format="json")
+        assert response.status_code == 400
+
+    def test_token_invalid_after_password_change(self, api_client, create_user):
+        """Nach erfolgreichem Reset ist der Token nicht mehr gültig."""
+        user = create_user(email="once@example.com", is_active=True)
+        url, _ = _build_confirm_url(user)
+
+        # Erster Reset - erfolgreich
+        api_client.post(url, {
+            "new_password": "brandNew456!",
+            "confirm_password": "brandNew456!"
+        }, format="json")
+
+        # Zweiter Versuch mit demselben Token - Token ist durch Passwortänderung invalidiert
+        response = api_client.post(url, {
+            "new_password": "anotherPass789!",
+            "confirm_password": "anotherPass789!"
+        }, format="json")
+        assert response.status_code == 400
