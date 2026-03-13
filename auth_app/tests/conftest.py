@@ -2,18 +2,6 @@ import pytest
 from django.contrib.auth.models import User
 
 @pytest.fixture(autouse=True)
-def use_sqlite_db(settings):
-    """
-    Override database to use SQLite for tests (no PostgeSQL needed).
-    """
-    settings.DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-
-@pytest.fixture(autouse=True)
 def set_domain(settings):
     """
     Ensure DOMAIN setting exists for send_activation_email.
