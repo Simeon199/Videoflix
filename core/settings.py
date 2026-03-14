@@ -32,6 +32,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost").split(",")
+DOMAIN = os.environ.get("DOMAIN", default="http://127.0.0.1:8000")
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://localhost:4200").split(",")
 
 CORS_ALLOWED_ORIGINS = os.environ.get(
@@ -166,6 +167,18 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
+
+# Email
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", default=587))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", default="True") == "True"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="noreply@videoflix.de")
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
