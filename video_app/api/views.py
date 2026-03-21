@@ -38,3 +38,20 @@ class HLSManifestView(APIView):
 
         cache.set(cache_key, content, timeout=300)
         return HttpResponse(content, content_type="application/vnd.apple.mpegurl")
+    
+class HLSSegmentView(APIView):
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, movie_id, resolution, segment):
+        file_path = os.path.join(
+            settings.MEDIA_ROOT, "videos", str(movie_id), resolution, segment
+        )
+
+        if not os.path.exists(file_path):
+            raise Http404("Video oder Segment nicht gefunden.")
+        
+        with open(file_path, "rb") as f:
+            content = f.read()
+
+        return HttpResponse(content, content_type="video/MP2T")
