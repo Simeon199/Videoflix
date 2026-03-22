@@ -29,3 +29,19 @@ def convert_to_hls(video_id):
             "-f", "hls",
             output_path
         ], check=True)
+    
+    thumbnail_dir=os.path.join(settings.MEDIA_ROOT, "thumbnails")
+    os.makedirs(thumbnail_dir, exist_ok=True)
+    thumbnail_filename=f"{video.id}.jpg"
+    thumbnail_path=os.path.join(thumbnail_dir, thumbnail_filename)
+
+    subprocess.run([
+         "ffmpeg", "-i", source_path,
+        "-ss", "00:00:10",
+        "-vframes", "1",
+        "-q:v", "2",
+        thumbnail_path
+    ], check=True)
+
+    video.thumbnail.name=f"thumbnails/{thumbnail_filename}"
+    video.save(update_fields=["thumbnail"])
