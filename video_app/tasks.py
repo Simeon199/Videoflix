@@ -9,7 +9,7 @@ def convert_to_hls(video_id):
     resolutions = {
         "480p": "854:480",
         "720p": "1280:720",
-        "1080": "1920:1080",
+        "1080p": "1920:1080",
     }
 
     for name, scale in resolutions.items():
