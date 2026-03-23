@@ -14,7 +14,7 @@ def create_user(db):
             password=password,
             is_active=is_active
         )
-    return create_user
+    return _create_user
 
 @pytest.fixture
 def sample_thumbnail():
