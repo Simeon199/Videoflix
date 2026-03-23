@@ -13,7 +13,7 @@ class TestVideoSerializer:
         serializer = VideoSerializer(video, context={"request": request})
 
         assert set(serializer.data.keys()) == {
-            "id", "created_at", "title", "description", "thumbnail", "category"
+            "id", "created_at", "title", "description", "thumbnail_url", "category"
         }
 
     def test_title_field_content(self, create_video):
@@ -38,7 +38,7 @@ class TestVideoSerializer:
         serializer = VideoSerializer(video, context={"request": request})
         
         assert serializer.data["thumbnail_url"].startswith("http")
-        assert "/media/thumbnail/" in serializer.data["thumbnail_url"]
+        assert "/media/thumbnails/" in serializer.data["thumbnail_url"]
 
     def test_thumbnail_none_without_request(self, create_video):
         video = create_video()

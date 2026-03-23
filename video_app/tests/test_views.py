@@ -103,6 +103,7 @@ class TestHLSManifestView:
         url = f"/api/video/{video.id}/{resolution}/index.m3u8"
 
         cache_key = f"hls_manifest_{video.id}_{resolution}"
+        cache.clear()
         assert cache.get(cache_key) is None # Yet not cached
 
         authenticated_client.get(url)
@@ -148,13 +149,13 @@ class TestHLSSegmentView:
 
     def test_returns_404_for_invalid_resolution(self, authenticated_client, hls_video_files):
         video, _, _ = hls_video_files
-        url = f"/api/video/{video.id}/360p/000.ts"
+        url = f"/api/video/{video.id}/360p/000.ts/"
         response = authenticated_client.get(url)
         assert response.status_code == 404
 
     def test_only_get_method_allowed(self, authenticated_client, hls_video_files):
         video, resolution, _ = hls_video_files
-        url = f"/api/video/{video.id}/{resolution}/000.ts"
+        url = f"/api/video/{video.id}/{resolution}/000.ts/"
         assert authenticated_client.post(url, {}, format="json").status_code == 405
         assert authenticated_client.put(url, {}, format="json").status_code == 405
         assert authenticated_client.delete(url).status_code == 405
