@@ -44,7 +44,6 @@ class PasswordResetSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if not User.objects.filter(email=value, is_active=True).exists():
-            # Aus Sicherheitsgründen keinen Hinweis geben, ob die Email existiert (HTTP 200 immer).
             pass
         return value  
     
