@@ -63,6 +63,6 @@ def hls_video_files(db, create_video, tmp_path, monkeypatch):
 
     manifest_content = "#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:10.0,\n000.ts\n#EXT-X-ENDLIST\n"
     (video_dir / "index.m3u8").write_text(manifest_content)
-    (video_dir / "000.ts").write_bytes(b"\x00"*188) # minimal ts dummy data
+    (video_dir / "000.ts").write_bytes(b"\x00"*188) 
 
     return video, "480p", manifest_content
