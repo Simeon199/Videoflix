@@ -7,6 +7,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.middleware.csrf import get_token
 
 from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 from .utils import send_activation_email, send_password_reset_email
@@ -94,6 +95,14 @@ class LoginView(APIView):
             samesite='None'
         )
 
+        response.set_cookie(
+            key='csrftoken',
+            value=get_token(request),
+            httponly=False,
+            secure=True,
+            samesite='None'
+        )
+
         return response
 
 class LogoutView(APIView):
@@ -122,7 +131,8 @@ class LogoutView(APIView):
 
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
-
+        response.delete_cookie('csrftoken')
+        
         return response
     
 class TokenRefreshView(APIView):
@@ -160,6 +170,14 @@ class TokenRefreshView(APIView):
             httponly=True,
             secure=True,
             samesite='None',
+        )
+
+        response.set_cookie(
+            key='csrftoken',
+            value=get_token(request),
+            httponly=False,
+            secure=True,
+            samesite='None'
         )
 
         return response
