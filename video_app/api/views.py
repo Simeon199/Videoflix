@@ -1,9 +1,3 @@
-"""
-Video API views for HLS streaming and video management.
-
-This module provides API endpoints for video listing and HLS (HTTP Live Streaming)
-manifest and segment delivery. All views require authentication via JWT tokens.
-"""
 import os
 from django.conf import settings
 from django.core.cache import cache

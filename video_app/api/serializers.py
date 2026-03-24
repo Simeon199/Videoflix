@@ -1,9 +1,3 @@
-"""
-Serializers for video API endpoints.
-
-This module provides serializers for converting Video model instances
-to and from JSON format for API responses.
-"""
 from rest_framework import serializers
 from video_app.models import Video
 
