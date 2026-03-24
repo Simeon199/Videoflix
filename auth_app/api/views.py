@@ -3,14 +3,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
-from django.middleware.csrf import get_token
-
 from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
-from .utils import send_activation_email, send_password_reset_email
+from .utils import send_activation_email, send_password_reset_email, decode_uid_and_get_user
+from .cookie_utils import CookieMixin
+from .token_utils import blacklist_refresh_token, generate_access_token, get_token_error_response
 
 
 class RegistrationView(APIView):
@@ -19,7 +18,7 @@ class RegistrationView(APIView):
     Handles POST requests to register new users with email and password.
     Creates inactive user accounts and sends activation emails.
     """
-    
+
     def _build_user_response(self, user, token):
         """
         Build success response with user data and token.
@@ -51,28 +50,15 @@ class RegistrationView(APIView):
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         send_activation_email(user, uidb64, token)
         return self._build_user_response(user, token)
-    
+
+
 class ActivationView(APIView):
     """
     API view for user account activation.
     Handles GET requests to activate user accounts using tokens.
     Validates the activation token and sets user account as active.
     """
-    
-    def _decode_uid_and_get_user(self, uidb64):
-        """
-        Decode the base64-encoded user ID and retrieve the user object.
-        Args:
-            uidb64 (str): Base64-encoded user ID.
-        Returns:
-            User: The user object if found and valid, None otherwise.
-        """
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            return User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return None
-    
+
     def _validate_user_for_activation(self, user):
         """
         Validate that user exists and is not already active.
@@ -84,7 +70,7 @@ class ActivationView(APIView):
         if user and user.is_active:
             return False
         return user is not None
-    
+
     def _activate_user(self, user, token):
         """
         Activate user account if token is valid.
@@ -99,7 +85,7 @@ class ActivationView(APIView):
             user.save()
             return True
         return False
-    
+
     def _get_validated_user(self, uidb64):
         """
         Get and validate user for activation.
@@ -108,7 +94,7 @@ class ActivationView(APIView):
         Returns:
             User: The validated user object if valid for activation, None otherwise.
         """
-        user = self._decode_uid_and_get_user(uidb64)
+        user = decode_uid_and_get_user(uidb64)
         if not user or not self._validate_user_for_activation(user):
             return None
         return user
@@ -144,42 +130,14 @@ class ActivationView(APIView):
                 status=status.HTTP_200_OK
             )
         return self._activation_error()
-    
-class LoginView(APIView):
+
+
+class LoginView(CookieMixin, APIView):
     """
     API view for user login.
     Handles POST requests to authenticate users and generate JWT tokens.
     Sets authentication cookies for access token, refresh token, and CSRF token.
     """
-    
-    def _set_cookie(self, response, key, value, httponly=True):
-        """
-        Set a cookie in the response.
-        Args:
-            response (Response): The response object to set cookie on.
-            key (str): Cookie name.
-            value (str): Cookie value.
-            httponly (bool): Whether cookie is HTTP-only. Defaults to True.
-        """
-        response.set_cookie(
-            key=key,
-            value=value,
-            httponly=httponly,
-            secure=True,
-            samesite='None',
-        )
-    
-    def _set_authentication_cookies(self, response, refresh, request):
-        """
-        Set authentication-related cookies (access token, refresh token, CSRF token).
-        Args:
-            response (Response): The response object to set cookies on.
-            refresh (RefreshToken): JWT refresh token object.
-            request (Request): HTTP request object used to generate CSRF token.
-        """
-        self._set_cookie(response, 'access_token', str(refresh.access_token))
-        self._set_cookie(response, 'refresh_token', str(refresh))
-        self._set_cookie(response, 'csrftoken', get_token(request), httponly=False)
 
     def _build_login_response(self, user, refresh, request):
         """
@@ -214,59 +172,13 @@ class LoginView(APIView):
         refresh = RefreshToken.for_user(user)
         return self._build_login_response(user, refresh, request)
 
-class LogoutView(APIView):
+
+class LogoutView(CookieMixin, APIView):
     """
     API view for user logout.
     Handles POST requests to logout users by blacklisting refresh tokens
     and deleting authentication cookies.
     """
-    
-    def _get_and_blacklist_token(self, refresh_token):
-        """
-        Get refresh token from cookie and add it to blacklist.
-        Args:
-            refresh_token (str): The refresh token string from cookies.
-        Returns:
-            bool: True if successfully blacklisted, False if invalid, None if missing.
-        """
-        if not refresh_token:
-            return None
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return True
-        except TokenError:
-            return False
-    
-    def _delete_auth_cookies(self, response):
-        """
-        Delete all authentication-related cookies from response.
-        Args:
-            response (Response): The response object to delete cookies from.
-        """
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        response.delete_cookie('csrftoken')
-
-    def _get_token_error_response(self, result):
-        """
-        Build error response based on token blacklist result.
-        Args:
-            result (bool/None): Result from _get_and_blacklist_token method.
-        Returns:
-            Response: HTTP error response if there was an issue, None if successful.
-        """
-        if result is None:
-            return Response(
-                {'detail': 'Refresh-Token fehlt.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if result is False:
-            return Response(
-                {'detail': 'Token ist ungültig oder bereits abgelaufen.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        return None
 
     def _build_logout_response(self):
         """
@@ -290,77 +202,21 @@ class LogoutView(APIView):
             Response: HTTP 200 if successful, HTTP 400 if token missing/invalid.
         """
         refresh_token = request.COOKIES.get('refresh_token')
-        result = self._get_and_blacklist_token(refresh_token)
-        error_response = self._get_token_error_response(result)
-        if error_response:
-            return error_response
+        result = blacklist_refresh_token(refresh_token)
+        error = get_token_error_response(
+            result, 'Refresh-Token fehlt.', 'Token ist ungültig oder bereits abgelaufen.'
+        )
+        if error:
+            return error
         return self._build_logout_response()
-    
-class TokenRefreshView(APIView):
+
+
+class TokenRefreshView(CookieMixin, APIView):
     """
     API view for refreshing JWT tokens.
     Handles POST requests to refresh expired access tokens using refresh tokens.
     Sets new access and CSRF tokens in cookies.
     """
-    
-    def _get_new_access_token(self, refresh_token):
-        """
-        Generate new access token from refresh token.
-        Args:
-            refresh_token (str): The refresh token string from cookies.
-        Returns:
-            str: New access token if successful, False if invalid, None if missing.
-        """
-        if not refresh_token:
-            return None
-        try:
-            refresh = RefreshToken(refresh_token)
-            return str(refresh.access_token)
-        except TokenError:
-            return False
-    
-    def _set_token_cookies(self, response, access_token, request):
-        """
-        Set new access token and CSRF token cookies in response.
-        Args:
-            response (Response): The response object to set cookies on.
-            access_token (str): The new access token.
-            request (Request): HTTP request object used to generate CSRF token.
-        """
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite='None',
-        )
-        response.set_cookie(
-            key='csrftoken',
-            value=get_token(request),
-            httponly=False,
-            secure=True,
-            samesite='None'
-        )
-
-    def _get_refresh_error_response(self, new_access_token):
-        """
-        Build error response based on token refresh result.
-        Args:
-            new_access_token (str/bool/None): Result from _get_new_access_token.
-        Returns:
-            Response: HTTP error response if there was an issue, None if successful.
-        """
-        if new_access_token is None:
-            return Response(
-                {'detail': 'Refresh-Token fehlt.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        if new_access_token is False:
-            return Response(
-                {'detail': 'Ungültiger Refresh-Token'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        return None
 
     def _build_refresh_response(self, new_access_token, request):
         """
@@ -388,19 +244,23 @@ class TokenRefreshView(APIView):
             Response: HTTP 200 with new access token if successful, HTTP 400/401 if invalid.
         """
         refresh_token = request.COOKIES.get('refresh_token')
-        new_access_token = self._get_new_access_token(refresh_token)
-        error_response = self._get_refresh_error_response(new_access_token)
-        if error_response:
-            return error_response
+        new_access_token = generate_access_token(refresh_token)
+        error = get_token_error_response(
+            new_access_token, 'Refresh-Token fehlt.', 'Ungültiger Refresh-Token',
+            invalid_status=status.HTTP_401_UNAUTHORIZED
+        )
+        if error:
+            return error
         return self._build_refresh_response(new_access_token, request)
-    
+
+
 class PasswordResetView(APIView):
     """
     API view for initiating password reset.
     Handles POST requests to send password reset emails.
     Only sends email if the email belongs to an active user (security measure).
     """
-    
+
     def _send_reset_email_if_user_exists(self, email):
         """
         Send password reset email if active user with given email exists.
@@ -414,7 +274,7 @@ class PasswordResetView(APIView):
             send_password_reset_email(user, uidb64, token)
         except User.DoesNotExist:
             pass
-    
+
     def post(self, request):
         """
         Handle password reset POST request.
@@ -433,27 +293,14 @@ class PasswordResetView(APIView):
             status=status.HTTP_200_OK
         )
 
+
 class PasswordResetConfirmView(APIView):
     """
     API view for confirming password reset with new password.
     Handles POST requests to validate reset token and update user password.
     Validates token and ensures new passwords match before updating.
     """
-    
-    def _decode_uid_and_get_user(self, uidb64):
-        """
-        Decode the base64-encoded user ID and retrieve the user object.
-        Args:
-            uidb64 (str): Base64-encoded user ID.
-        Returns:
-            User: The user object if found and valid, None otherwise.
-        """
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            return User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            return None
-    
+
     def _validate_reset_token(self, user, token):
         """
         Validate reset token for given user.
@@ -464,7 +311,7 @@ class PasswordResetConfirmView(APIView):
             bool: True if token is valid, False otherwise.
         """
         return default_token_generator.check_token(user, token)
-    
+
     def _update_password(self, user, new_password):
         """
         Update user password and save to database.
@@ -484,7 +331,7 @@ class PasswordResetConfirmView(APIView):
         Returns:
             tuple: (user, error_response) - User if valid, error Response otherwise.
         """
-        user = self._decode_uid_and_get_user(uidb64)
+        user = decode_uid_and_get_user(uidb64)
         if not user:
             return None, Response(
                 {'error': 'Ungültiger Reset-Link.'},

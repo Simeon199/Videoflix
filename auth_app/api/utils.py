@@ -1,5 +1,24 @@
 from django.core.mail import EmailMessage
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
+
+
+def decode_uid_and_get_user(uidb64):
+    """
+    Decode a base64-encoded user ID and retrieve the user object.
+    Shared utility used by ActivationView and PasswordResetConfirmView.
+    Args:
+        uidb64 (str): Base64-encoded user ID.
+    Returns:
+        User: The user object if found and valid, None otherwise.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        return User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return None
 
 
 def send_activation_email(user, uidb64, token):
