@@ -337,4 +337,3 @@ class TestLogoutView:
         api_client.cookies["refresh_token"] = refresh_token
         response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 400
-
