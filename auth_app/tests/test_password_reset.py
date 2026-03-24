@@ -203,7 +203,6 @@ class TestPasswordResetConfirmView:
         """
         user = create_user(email="confirm@example.com", is_active=True)
         url, _ = _build_confirm_url(user)
-
         response = api_client.post(url, {
             "new_password": "brandNew456!",
             "confirm_password": "brandNew456!"
@@ -218,12 +217,10 @@ class TestPasswordResetConfirmView:
         """
         user = create_user(email="changed@example.com", password="oldPass123!", is_active=True)
         url, _ = _build_confirm_url(user)
-
         api_client.post(url, {
             "new_password": "brandNew456!",
             "confirm_password": "brandNew456!"
         }, format="json")
-
         user.refresh_from_db()
         assert user.check_password("brandNew456!")
         assert not user.check_password("oldPass123!")
@@ -258,7 +255,6 @@ class TestPasswordResetConfirmView:
         user = create_user(email="badtoken@example.com", is_active=True)
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         url = f"/api/password_confirm/{uidb64}/invalid_token/"
-
         response = api_client.post(url, {
             "new_password": "brandNew456!",
             "confirm_password": "brandNew456!"
@@ -271,7 +267,6 @@ class TestPasswordResetConfirmView:
         """
         user = create_user(email="mismatch@example.com", is_active=True)
         url, _ = _build_confirm_url(user)
-
         response = api_client.post(url, {
             "new_password": "brandNew456!",
             "confirm_password": "different789!"
@@ -285,13 +280,11 @@ class TestPasswordResetConfirmView:
         user = create_user(email="once@example.com", is_active=True)
         url, _ = _build_confirm_url(user)
 
-        # Erster Reset - erfolgreich
         api_client.post(url, {
             "new_password": "brandNew456!",
             "confirm_password": "brandNew456!"
         }, format="json")
 
-        # Zweiter Versuch mit demselben Token - Token ist durch Passwortänderung invalidiert
         response = api_client.post(url, {
             "new_password": "anotherPass789!",
             "confirm_password": "anotherPass789!"

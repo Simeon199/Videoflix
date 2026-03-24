@@ -25,17 +25,14 @@ class TestSendActivationEmail:
         """
         settings.DOMAIN = "http://testserver"
         settings.DEFAULT_FROM_EMAIL = "noreply@videoflix.de"
-        
         user = create_user(email="mail@example.com")
         mock_instance = MagicMock()
         MockEmailMessage.return_value = mock_instance
-
         send_activation_email(user, "dWlkYjY0", "test-token")
-
         MockEmailMessage.assert_called_once()
         call_args = MockEmailMessage.call_args
-        assert "Aktiviere dein Videoflix-Konto" in call_args[0][0] # subject
-        assert "mail@example.com" in call_args[0][3] # recipient_list
+        assert "Aktiviere dein Videoflix-Konto" in call_args[0][0] 
+        assert "mail@example.com" in call_args[0][3]
         mock_instance.send.assert_called_once_with(fail_silently=False)
 
     @patch("auth_app.api.utils.EmailMessage")
@@ -45,13 +42,10 @@ class TestSendActivationEmail:
         """
         settings.DOMAIN = "http://testserver"
         settings.DEFAULT_FROM_EMAIL = "noreply@videoflix.de"
-
         user = create_user(email="link@example.com")
         MockEmailMessage.return_value = MagicMock()
-
         send_activation_email(user, "abc123", "my-token")
-
         call_args = MockEmailMessage.call_args
-        body = call_args[0][1] # second positional arg = body
+        body = call_args[0][1] 
         body_str = str(body)
         assert "api/activate/abc123/my-token" in body_str

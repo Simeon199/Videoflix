@@ -53,11 +53,9 @@ class TestRegistrationView:
             "confirmed_password": "securePass123!",
         }
         response = api_client.post(REGISTER_URL, data, format="json")
-
         assert response.status_code == 201
         assert response.data["user"]["email"] == "new@example.com"
         assert "token" in response.data
-
         user = User.objects.get(email="new@example.com")
         assert user.is_active is False
         mock_send_email.assert_called_once()
@@ -73,7 +71,6 @@ class TestRegistrationView:
             "confirmed_password": "securePass123!",
         }
         api_client.post(REGISTER_URL, data, format="json")
-
         user = User.objects.get(email="inactive@example.com")
         assert user.is_active is False
         assert user.username == "inactive@example.com"
@@ -136,12 +133,9 @@ class TestActivationView:
         """
         user = create_user(email="activate@example.com", is_active=False)
         url = _build_activation_url(user)
-        
         response = api_client.get(url)
-
         assert response.status_code == 200
         assert response.data["message"] == "Account successfully activated."
-
         user.refresh_from_db()
         assert user.is_active is True
 
@@ -151,7 +145,6 @@ class TestActivationView:
         """
         url = "/api/activate/invalid-uid/some-token/"
         response = api_client.get(url)
-
         assert response.status_code == 400
         assert "error" in response.data
 
@@ -162,7 +155,6 @@ class TestActivationView:
         uidb64 = urlsafe_base64_encode(force_bytes(99999))
         url = f"/api/activate/{uidb64}/some-token/"
         response = api_client.get(url)
-
         assert response.status_code == 400
 
     def test_invalid_token(self, api_client, create_user):
@@ -172,12 +164,9 @@ class TestActivationView:
         user = create_user(email="badtoken@example.com", is_active=False)
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         url = f"/api/activate/{uidb64}/invalid-token/"
-
         response = api_client.get(url)
-
         assert response.status_code == 400
         assert "error" in response.data
-
         user.refresh_from_db()
         assert user.is_active is False
 
@@ -187,11 +176,7 @@ class TestActivationView:
         """
         user = create_user(email="once@example.com", is_active=False)
         url = _build_activation_url(user)
-
-        # First activation
         response = api_client.get(url)
         assert response.status_code == 200
-
-        # Second activation with same token - token is now invalid because user.is_active changed (affects token hash)
         response = api_client.get(url)
         assert response.status_code == 400

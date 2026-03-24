@@ -42,7 +42,6 @@ class TestRegistrationSerializer:
         serializer = RegistrationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
         assert user.email == "new@example.com"
         assert user.username == "new@example.com"
         assert user.is_active is False

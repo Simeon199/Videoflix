@@ -9,12 +9,10 @@ TOKEN_REFRESH_URL = "/api/token/refresh"
 
 """
 Test module for authentication functionality including login and logout.
-
 This module contains comprehensive tests for the authentication system's core features:
 - LoginSerializer validation
 - LoginView API endpoint behavior
 - LogoutView API endpoint behavior
-
 Tests cover successful operations, error handling, security aspects like token blacklisting,
 and proper cookie management for JWT tokens.
 """
@@ -328,12 +326,8 @@ class TestLogoutView:
         """
         refresh_token = self._login(api_client, "active@example.com", "securePass123!")
         api_client.cookies["refresh_token"] = refresh_token
-
-        # Erster Logout - erfolgreich
         response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 200
-
-        # Zweiter Logout mit demselben Token - muss fehlschlagen
         api_client.cookies["refresh_token"] = refresh_token
         response = api_client.post(LOGOUT_URL, format="json")
         assert response.status_code == 400
