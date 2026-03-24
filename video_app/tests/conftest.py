@@ -1,12 +1,26 @@
-import os
 import pytest
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from video_app.models import Video
 
+
 @pytest.fixture
 def create_user(db):
+    """
+    Fixture factory for creating test users.
+    Provides a callable that creates and returns a new user with configurable
+    credentials. Uses the database fixture to enable database access.
+    Args:
+        db: PyTest Django database fixture for database access.
+    Returns:
+        callable: A function that creates a user with the following parameters:
+            - email (str): User's email address. Defaults to "test@example.com".
+            - password (str): User's password. Defaults to "securePass123!".
+            - is_active (bool): Whether user is active. Defaults to True.
+            Returns:
+                User: The newly created user object.
+    """
     def _create_user(email="test@example.com", password="securePass123!", is_active=True):
         return User.objects.create_user(
             username=email,
@@ -16,8 +30,16 @@ def create_user(db):
         )
     return _create_user
 
+
 @pytest.fixture
 def sample_thumbnail():
+    """
+    Fixture providing a minimal valid JPEG image for testing.
+    Creates a SimpleUploadedFile containing minimal JPEG binary data
+    suitable for testing file upload functionality and video thumbnails.
+    Returns:
+        SimpleUploadedFile: A file object representing a valid JPEG image with filename "test.jpg" and image/jpeg content type.
+    """
     jpeg_bytes = (
         b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00'
         b'\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t'
@@ -40,8 +62,24 @@ def sample_thumbnail():
     )
     return SimpleUploadedFile("test.jpg", jpeg_bytes, content_type="image/jpeg")
 
+
 @pytest.fixture
 def create_video(db, sample_thumbnail):
+    """
+    Fixture factory for creating test video objects.
+    Provides a callable that creates and returns a new Video instance
+    with configurable properties. Uses database fixture for persistence.
+    Args:
+        db: PyTest Django database fixture for database access.
+        sample_thumbnail: Fixture providing a test image file.
+    Returns:
+        callable: A function that creates a video with the following parameters:
+            - title (str): Video title. Defaults to "Test Movie".
+            - description (str): Video description. Defaults to "Test Description".
+            - category (str): Video category. Defaults to "Drama".
+            Returns:
+                Video: The newly created video object with thumbnail attached.
+    """
     def _create_video(title="Test Movie", description="Test Description", category="Drama"):
         return Video.objects.create(
             title=title,
@@ -51,18 +89,30 @@ def create_video(db, sample_thumbnail):
         )
     return _create_video
 
+
 @pytest.fixture
 def hls_video_files(db, create_video, tmp_path, monkeypatch):
+    """
+    Fixture providing a test video with HLS (HTTP Live Streaming) file structure.
+    Creates a video object and sets up a mock HLS directory structure with
+    manifest file and segment files for testing video streaming functionality.
+    Temporarily redirects the MEDIA_ROOT setting to an isolated temporary directory.
+    Args:
+        db: PyTest Django database fixture for database access.
+        create_video: Fixture factory for creating test videos.
+        tmp_path: PyTest fixture providing a temporary directory.
+        monkeypatch: PyTest fixture for temporarily patching settings.
+    Returns:
+        tuple: A tuple containing:
+            - video (Video): The created video object.
+            - resolution (str): The resolution subdirectory name ("480p").
+            - manifest_content (str): The HLS manifest (.m3u8) file content.
+    """
     video = create_video(title="HLS Test Film")
-
-    # Redirect MEDIA_ROOT to tmp_path
     monkeypatch.setattr(settings, "MEDIA_ROOT", str(tmp_path))
-
     video_dir = tmp_path / "videos" / str(video.id) / "480p"
     video_dir.mkdir(parents=True)
-
     manifest_content = "#EXTM3U\n#EXT-X-VERSION:3\n#EXTINF:10.0,\n000.ts\n#EXT-X-ENDLIST\n"
     (video_dir / "index.m3u8").write_text(manifest_content)
     (video_dir / "000.ts").write_bytes(b"\x00"*188) 
-
     return video, "480p", manifest_content
