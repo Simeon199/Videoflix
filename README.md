@@ -1,6 +1,20 @@
 # Videoflix
 
-A video streaming backend built with Django REST Framework. It provides user authentication, video upload with automatic HLS conversion, and adaptive bitrate streaming at multiple resolutions.
+This project is designed as a portfolio project for further training as a backend developer. It builds on an existing frontend and is a video streaming backend built with Django REST Framework. It provides user authentication, video upload with automatic HLS conversion, and adaptive bitrate streaming at multiple resolutions. The respective frontend repository can be found under the following link:
+[Videoflix Frontend](https://github.com/Developer-Akademie-Backendkurs/project.Videoflix)
+
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [API Endpoints](#api-endpoints)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Running Tests](#running-tests)
+- [Project Structure](#project-structure)
+- [Video Processing Pipeline](#video-processing-pipeline)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Tech Stack
 
@@ -52,7 +66,7 @@ A video streaming backend built with Django REST Framework. It provides user aut
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Simeon199/Videoflix.git
 cd Videoflix
 ```
 
@@ -151,3 +165,11 @@ Videoflix/
 4. A thumbnail is generated from the video
 5. The HLS segments and manifests are stored in the `media/` directory
 6. Clients request the adaptive `.m3u8` manifest and stream `.ts` segments
+
+## Contributing
+
+Contributions are always welcome! If you have suggestions for improvements or want to propose changes, feel free to open an issue. Alternatively, consider forking the repository and submitting a pull request.
+
+## License
+
+This project is licensed under the MIT License — © 2026 Simon Kiesner.
