@@ -112,6 +112,10 @@ class ActivationView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    def _wants_html(self, request):
+        accept = request.META.get('HTTP_ACCEPT', '')
+        return 'text/html' in accept
+
     def get(self, request, uidb64, token):
         """
         Handle user account activation GET request.
@@ -125,15 +129,15 @@ class ActivationView(APIView):
         """
         user = self._get_validated_user(uidb64)
         if not user:
-            return self._activation_error()
+           return self._activation_error()
         if self._activate_user(user, token):
-            return redirect(f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_LOGIN_PATH}")
-            # return Response(
-            #     {'message': 'Account successfully activated.'},
-            #     status=status.HTTP_200_OK
-            # )
-        return redirect(f"{settings.FRONTEND_DOMAIN}/activation-failed/")
-        # return self._activation_error()
+            if self._wants_html(request):
+                return redirect(f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_LOGIN_PATH}")
+            return Response(
+                {'message': 'Account successfully activated.'},
+                status=status.HTTP_200_OK
+            )
+        return self._activation_error()
 
 
 class LoginView(CookieMixin, APIView):

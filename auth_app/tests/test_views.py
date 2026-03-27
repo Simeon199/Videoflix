@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -180,3 +181,12 @@ class TestActivationView:
         assert response.status_code == 200
         response = api_client.get(url)
         assert response.status_code == 400
+
+    def test_successfull_activation_redirects_browser(self, api_client, create_user):
+        user = create_user(email="browser@example.com", is_active=False)
+        url = _build_activation_url(user)
+        response = api_client.get(url, HTTP_ACCEPT="text/html")
+        assert response.status_code == 302
+        assert settings.FRONTEND_LOGIN_PATH in response["Location"]
+        user.refresh_from_db()
+        assert user.is_active is True
