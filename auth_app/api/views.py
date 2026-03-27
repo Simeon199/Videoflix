@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
+from django.shortcuts import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -125,11 +127,13 @@ class ActivationView(APIView):
         if not user:
             return self._activation_error()
         if self._activate_user(user, token):
-            return Response(
-                {'message': 'Account successfully activated.'},
-                status=status.HTTP_200_OK
-            )
-        return self._activation_error()
+            return redirect(f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_LOGIN_PATH}")
+            # return Response(
+            #     {'message': 'Account successfully activated.'},
+            #     status=status.HTTP_200_OK
+            # )
+        return redirect(f"{settings.FRONTEND_DOMAIN}/activation-failed/")
+        # return self._activation_error()
 
 
 class LoginView(CookieMixin, APIView):
