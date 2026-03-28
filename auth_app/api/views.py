@@ -13,6 +13,18 @@ from .utils import send_activation_email, send_password_reset_email, decode_uid_
 from .cookie_utils import CookieMixin
 from .token_utils import blacklist_refresh_token, generate_access_token, get_token_error_response
 
+class HtmlRequestMixin:
+    def _wants_html(self, request):
+        """
+        Check if the client accepts HTML responses.
+        Examines the HTTP Accept header to determine if HTML is acceptable.
+        Args:
+            request (Request): HTTP request object.
+        Returns:
+            bool: True if 'text/html' is in Accept header, False otherwise.
+        """
+        accept = request.META.get('HTTP_ACCEPT', '')
+        return 'text/html' in accept
 
 class RegistrationView(APIView):
     """
@@ -54,7 +66,7 @@ class RegistrationView(APIView):
         return self._build_user_response(user, token)
 
 
-class ActivationView(APIView):
+class ActivationView(HtmlRequestMixin, APIView):
     """
     API view for user account activation.
     Handles GET requests to activate user accounts using tokens.
@@ -111,42 +123,21 @@ class ActivationView(APIView):
             {'error': 'Aktivierung fehlgeschlagen.'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-    def _wants_html(self, request):
-        """
-        Check if the client accepts HTML responses.
-        Examines the HTTP Accept header to determine if HTML is acceptable.
-        Args:
-            request (Request): HTTP request object.
-        Returns:
-            bool: True if 'text/html' is in Accept header, False otherwise.
-        """
-        accept = request.META.get('HTTP_ACCEPT', '')
-        return 'text/html' in accept
-
+    
     def get(self, request, uidb64, token):
-        """
-        Handle user account activation GET request.
-        Validates the activation token and activates the user account if valid.
-        Args:
-            request (Request): HTTP request.
-            uidb64 (str): Base64-encoded user ID from URL.
-            token (str): Activation token from URL.
-        Returns:
-            Response: HTTP 200 if successful, HTTP 400 if activation fails.
-        """
+        if self._wants_html(request):
+            return redirect(
+                f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_ACTIVATION_PAGE}?uid={uidb64}&token={token}"
+            )
         user = self._get_validated_user(uidb64)
         if not user:
-           return self._activation_error()
+            return self._activation_error()
         if self._activate_user(user, token):
-            if self._wants_html(request):
-                return redirect(f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_LOGIN_PATH}")
             return Response(
                 {'message': 'Account successfully activated.'},
                 status=status.HTTP_200_OK
             )
         return self._activation_error()
-
 
 class LoginView(CookieMixin, APIView):
     """
@@ -310,7 +301,7 @@ class PasswordResetView(APIView):
         )
 
 
-class PasswordResetConfirmView(APIView):
+class PasswordResetConfirmView(HtmlRequestMixin, APIView):
     """
     API view for confirming password reset with new password.
     Handles POST requests to validate reset token and update user password.
@@ -370,6 +361,16 @@ class PasswordResetConfirmView(APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self._update_password(user, serializer.validated_data['new_password'])
+
+    def get(self, request, uidb64, token):
+        if self._wants_html(request):
+            return redirect(
+                f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_RESET_PASSWORD_PATH}?uid={uidb64}&token={token}"
+            )
+        return Response(
+            {'detail': 'Use POST to reset your password.'},
+            status=status.HTTP_200_OK
+        )
 
     def post(self, request, uidb64, token):
         """

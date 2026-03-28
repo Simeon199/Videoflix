@@ -35,6 +35,8 @@ ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost").split(",")
 DOMAIN = os.environ.get("DOMAIN", default="http://127.0.0.1:8000")
 FRONTEND_DOMAIN = "http://127.0.0.1:5500/"
 FRONTEND_LOGIN_PATH = "pages/auth/login.html"
+FRONTEND_ACTIVATION_PAGE = "pages/auth/activate.html"
+FRONTEND_RESET_PASSWORD_PATH = "pages/auth/confirm_password.html"
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://localhost:4200").split(",")
 
 CORS_ALLOWED_ORIGINS = os.environ.get(

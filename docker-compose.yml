@@ -48,6 +48,7 @@ services:
     depends_on:
       - db
       - redis
+    entrypoint: ["./rqworker.entrypoint.sh"]
 
 volumes:
   postgres_data:
