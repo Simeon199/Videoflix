@@ -100,7 +100,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\": \"yourmail@testmail.com\",\r\n    \"password\": \"Hallo123?\"\r\n}",
+              "raw": "{\r\n    \"email\": \"{{user_email}}\",\r\n    \"password\": \"{{user_password}}\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
