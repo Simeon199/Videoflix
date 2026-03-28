@@ -113,6 +113,14 @@ class ActivationView(APIView):
         )
 
     def _wants_html(self, request):
+        """
+        Check if the client accepts HTML responses.
+        Examines the HTTP Accept header to determine if HTML is acceptable.
+        Args:
+            request (Request): HTTP request object.
+        Returns:
+            bool: True if 'text/html' is in Accept header, False otherwise.
+        """
         accept = request.META.get('HTTP_ACCEPT', '')
         return 'text/html' in accept
 

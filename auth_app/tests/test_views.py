@@ -183,6 +183,11 @@ class TestActivationView:
         assert response.status_code == 400
 
     def test_successfull_activation_redirects_browser(self, api_client, create_user):
+        """
+        Test that browser clients receive a redirect after successful activation.
+        Verifies that when Accept header includes text/html, activation redirects to login page
+        and the user is activated.
+        """
         user = create_user(email="browser@example.com", is_active=False)
         url = _build_activation_url(user)
         response = api_client.get(url, HTTP_ACCEPT="text/html")
