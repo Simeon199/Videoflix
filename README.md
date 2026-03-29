@@ -163,14 +163,6 @@ python manage.py rqworker default
 - API: http://localhost:8000/api/
 - Admin: http://localhost:8000/admin/
 
-## Running Tests
-
-```bash
-pytest
-```
-
-Tests use an in-memory SQLite database and local memory cache, so no external services are required.
-
 ## Project Structure
 
 ```
