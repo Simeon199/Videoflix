@@ -192,6 +192,6 @@ class TestActivationView:
         url = _build_activation_url(user)
         response = api_client.get(url, HTTP_ACCEPT="text/html")
         assert response.status_code == 302
-        assert settings.FRONTEND_LOGIN_PATH in response["Location"]
+        assert settings.FRONTEND_ACTIVATION_PAGE in response["Location"]
         user.refresh_from_db()
         assert user.is_active is True

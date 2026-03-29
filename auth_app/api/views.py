@@ -125,6 +125,19 @@ class ActivationView(HtmlRequestMixin, APIView):
         )
 
     def get(self, request, uidb64, token):
+        """
+        Handle account activation GET request.
+        Validates the user and activation token, activates the account on success,
+        and redirects HTML clients to the frontend activation page.
+        Args:
+            request (Request): HTTP request object.
+            uidb64 (str): Base64-encoded user ID from the activation link.
+            token (str): Activation token from the activation link.
+        Returns:
+            Response: Redirect to frontend activation page if HTML client and activation
+            successful, HTTP 200 with success message for API clients, or HTTP 400
+            if the user is invalid or the token check fails.
+        """
         user = self._get_validated_user(uidb64)
         if not user:
             return self._activation_error()
@@ -364,6 +377,20 @@ class PasswordResetConfirmView(HtmlRequestMixin, APIView):
         self._update_password(user, serializer.validated_data['new_password'])
 
     def get(self, request, uidb64, token):
+        """
+        Handle password reset GET request.
+        Validates the user and reset token before redirecting HTML clients to the
+        frontend password reset page.
+        Args:
+            request (Request): HTTP request object.
+            uidb64 (str): Base64-encoded user ID from the reset link.
+            token (str): Reset token from the reset link.
+        Returns:
+            Response: Redirect to frontend reset page (with uid and token as query
+            params) if HTML client and token is valid, HTTP 200 with confirmation
+            message for API clients, or HTTP 400 if the user is invalid or the
+            token is expired.
+        """
         user, error_response = self._get_validated_reset_user(uidb64, token)
         if error_response:
             return error_response
@@ -377,6 +404,19 @@ class PasswordResetConfirmView(HtmlRequestMixin, APIView):
         )
 
     def post(self, request, uidb64, token):
+        """
+        Handle password reset confirmation POST request.
+        Validates the reset token and updates the user password if the token is
+        valid. 
+            request (Request): HTTP request containing the new password and its
+            confirmation.
+            uidb64 (str): Base64-encoded user ID from the URL.
+            token (str): Reset token from the URL.
+        Returns:
+            Response: HTTP 200 with success message if the password was updated,
+            or HTTP 400 if the user is invalid, the token is expired, or the
+            password validation fails.
+        """
         user, error_response = self._get_validated_reset_user(uidb64, token)
         if error_response:
             return error_response
