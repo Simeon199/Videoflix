@@ -29,15 +29,15 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECRET_KEY = 'django-insecure-l+k316fx*q+yn4_+#fyoza*xsgr##^x@7zy8%y$w)i^z-o-jh#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", default="True") == "True"
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", default="localhost,127.0.0.1").split(",")
 DOMAIN = os.environ.get("DOMAIN", default="http://127.0.0.1:8000")
-FRONTEND_DOMAIN = "http://127.0.0.1:5500/"
-FRONTEND_LOGIN_PATH = "pages/auth/login.html"
-FRONTEND_ACTIVATION_PAGE = "pages/auth/activate.html"
-FRONTEND_RESET_PASSWORD_PATH = "pages/auth/confirm_password.html"
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://localhost:4200").split(",")
+FRONTEND_DOMAIN = os.environ.get("FRONTEND_DOMAIN", default="http://127.0.0.1:5500/")
+FRONTEND_LOGIN_PATH = os.environ.get("FRONTEND_LOGIN_PATH", default="pages/auth/login.html")
+FRONTEND_ACTIVATION_PAGE = os.environ.get("FRONTEND_ACTIVATION_PAGE", default="pages/auth/activate.html")
+FRONTEND_RESET_PASSWORD_PATH = os.environ.get("FRONTEND_RESET_PASSWORD_PATH", default="pages/auth/confirm_password.html")
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", default="http://localhost:5500,http://127.0.0.1:5500").split(",")
 
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
@@ -180,6 +180,7 @@ EMAIL_BACKEND = os.environ.get(
 EMAIL_HOST = os.environ.get("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", default=587))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", default="True") == "True"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", default="False") == "True"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", default="noreply@videoflix.de")

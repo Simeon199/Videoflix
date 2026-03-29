@@ -84,6 +84,12 @@ SECRET_KEY=your-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 
+# Backend domain (used in activation & password reset email links)
+DOMAIN=http://127.0.0.1:8000
+
+# Frontend (adjust port to match your local dev server, e.g. VS Code Live Server)
+FRONTEND_DOMAIN=http://127.0.0.1:5500/
+
 # Database
 DB_NAME=videoflix_db
 DB_USER=my_user
@@ -110,10 +116,14 @@ EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=noreply@videoflix.de
 ```
 
-### 3. Start with Docker
+> **Note:** If your VS Code Live Server runs on a different port (e.g. 5501), update `FRONTEND_DOMAIN` accordingly (e.g. `http://127.0.0.1:5501/`).
+
+### 3a. Start with Docker
+
+> **No local Python or virtual environment required.** All dependencies are installed inside the Docker containers. Red import warnings in your IDE (e.g. VS Code) can be ignored — they do not affect the running application.
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 This starts four services:
@@ -124,6 +134,29 @@ This starts four services:
 - **rqworker** – Background task worker for video conversion
 
 The entrypoint script automatically runs migrations and creates the superuser.
+
+### 3b. Local development (without Docker)
+
+```bash
+python -m venv env
+source env/bin/activate      # Linux/macOS
+env\Scripts\activate          # Windows
+pip install -r requirements.txt
+```
+
+Make sure PostgreSQL, Redis, and FFmpeg are running locally, then adjust `DB_HOST` and `REDIS_HOST` in your `.env` to `localhost`.
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+In a separate terminal (with the virtual environment activated):
+
+```bash
+python manage.py rqworker default
+```
 
 ### 4. Access the application
 
