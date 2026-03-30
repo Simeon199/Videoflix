@@ -23,7 +23,7 @@ class VideoListView(generics.ListAPIView):
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = VideoSerializer
-    queryset = Video.objects.all().order_by("-created_at")
+    queryset = Video.objects.exclude(thumbnail="").order_by("-created_at")
 
 class HLSManifestView(APIView):
     """
