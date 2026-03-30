@@ -56,7 +56,7 @@ def _generate_video_thumbnail(source_path, video_id, video):
     thumbnail_filename = f"{video_id}.jpg"
     thumbnail_path = os.path.join(thumbnail_dir, thumbnail_filename)
     subprocess.run([
-        "ffmpeg", "-i", source_path,
+        "ffmpeg", "-y", "-i", source_path,
         "-ss", "00:00:10",
         "-vframes", "1",
         "-q:v", "2",

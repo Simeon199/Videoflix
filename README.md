@@ -79,40 +79,41 @@ cp .env.template .env
 Edit `.env` and set your values:
 
 ```env
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_PASSWORD=your-admin-password
+DJANGO_SUPERUSER_EMAIL=admin@example.com
+
 SECRET_KEY=your-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
+CSRF_TRUSTED_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:5501,http://localhost:5501
 
-# Backend domain (used in activation & password reset email links)
-DOMAIN=http://127.0.0.1:8000
-
-# Frontend (adjust port to match your local dev server, e.g. VS Code Live Server)
-FRONTEND_DOMAIN=http://127.0.0.1:5500/
-
-# Database
 DB_NAME=videoflix_db
 DB_USER=my_user
 DB_PASSWORD=your-db-password
 DB_HOST=db
 DB_PORT=5432
 
-# Redis
 REDIS_HOST=redis
 REDIS_LOCATION=redis://redis:6379/1
 REDIS_PORT=6379
 REDIS_DB=0
 
-# Superuser
-DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_PASSWORD=your-admin-password
-DJANGO_SUPERUSER_EMAIL=admin@example.com
-
-# Email (for account activation & password reset)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_HOST_USER=your-email@gmail.com
 EMAIL_HOST_PASSWORD=your-app-password
-DEFAULT_FROM_EMAIL=noreply@videoflix.de
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+DEFAULT_FROM_EMAIL=default_from_email
+EMAIL_BACKEND=default_email_backend
+
+DOMAIN=http://127.0.0.1:8000
+FRONTEND_DOMAIN=http://127.0.0.1:5500/
+FRONTEND_LOGIN_PATH=pages/auth/login.html
+FRONTEND_ACTIVATION_PAGE=pages/auth/activate.html
+FRONTEND_RESET_PASSWORD_PATH=pages/auth/confirm_password.html
 ```
 
 > **Note:** If your VS Code Live Server runs on a different port (e.g. 5501), update `FRONTEND_DOMAIN` accordingly (e.g. `http://127.0.0.1:5501/`).
@@ -161,14 +162,6 @@ python manage.py rqworker default
 
 - API: http://localhost:8000/api/
 - Admin: http://localhost:8000/admin/
-
-## Running Tests
-
-```bash
-pytest
-```
-
-Tests use an in-memory SQLite database and local memory cache, so no external services are required.
 
 ## Project Structure
 
