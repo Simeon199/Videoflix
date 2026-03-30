@@ -80,7 +80,7 @@ Edit `.env` and set your values:
 
 ```env
 DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_PASSWORD=your-admin-password
+DJANGO_SUPERUSER_PASSWORD=adminpassword
 DJANGO_SUPERUSER_EMAIL=admin@example.com
 
 SECRET_KEY=your-secret-key
