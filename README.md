@@ -100,13 +100,13 @@ REDIS_LOCATION=redis://redis:6379/1
 REDIS_PORT=6379
 REDIS_DB=0
 
-EMAIL_HOST=smtp.gmail.com
+EMAIL_HOST=smtp.example.com
 EMAIL_PORT=587
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+EMAIL_HOST_USER=yourmail@example.com
+EMAIL_HOST_PASSWORD=your-email-host-password
 EMAIL_USE_TLS=True
 EMAIL_USE_SSL=False
-DEFAULT_FROM_EMAIL=default_from_email
+DEFAULT_FROM_EMAIL=noreply@example.com
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 
 DOMAIN=http://127.0.0.1:8000
@@ -126,12 +126,11 @@ FRONTEND_RESET_PASSWORD_PATH=pages/auth/confirm_password.html
 docker-compose up --build -d
 ```
 
-This starts four services:
+This starts three services:
 
 - **db** – PostgreSQL
 - **redis** – Redis
-- **web** – Django API on port 8000
-- **rqworker** – Background task worker for video conversion
+- **web** – Django API on port 8000 + RQ background worker
 
 The entrypoint script automatically runs migrations and creates the superuser.
 
