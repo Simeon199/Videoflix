@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm your email</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f4f4; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+
+          <!-- Logo -->
+          <tr>
+            <td align="center" style="padding: 40px 40px 20px 40px;">
+              <span style="font-size: 28px; font-weight: bold; color: #4B0EF5; letter-spacing: 1px;">&#x276F; VIDEOFLIX</span>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px; color: #333333; font-size: 16px; line-height: 1.6;">
+              <p>Dear <strong style="color: #4B0EF5;">{{ user_name }}</strong>,</p>
+              <p>Thank you for registering with <strong>Videoflix</strong>. To complete your registration and verify your email address, please click the link below:</p>
+            </td>
+          </tr>
+
+          <!-- Button -->
+          <tr>
+            <td align="left" style="padding: 0 40px 30px 40px;">
+              <a href="{{ activation_link }}" target="_blank"
+                 style="display: inline-block; background-color: #4B0EF5; color: #ffffff; text-decoration: none;
+                        padding: 14px 32px; border-radius: 30px; font-size: 16px; font-weight: bold;">
+                Activate account
+              </a>
+            </td>
+          </tr>
+
+          <!-- Disclaimer -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px; color: #333333; font-size: 16px; line-height: 1.6;">
+              <p>If you did not create an account with us, please disregard this email.</p>
+            </td>
+          </tr>
+
+          <!-- Sign-off -->
+          <tr>
+            <td style="padding: 0 40px 40px 40px; color: #333333; font-size: 16px; line-height: 1.6;">
+              <p>Best regards,</p>
+              <p>Your Videoflix Team.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,7 +1,9 @@
 import django_rq
 from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 
@@ -36,14 +38,22 @@ def _send_activation_email_task(user_id, uidb64, token):
     """
     user = User.objects.get(pk=user_id)
     activation_link = f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_ACTIVATION_PAGE}?uid={uidb64}&token={token}"
-    subject = 'Aktiviere dein Videoflix-Konto'
-    body = (
-        f"Hallo, \n\n"
-        f"bitte klick auf den folgenden Link, um dein Konto zu aktivieren:\n\n"
+    user_name = user.first_name or user.email
+    subject = 'Confirm your email'
+    text_body = (
+        f"Dear {user_name},\n\n"
+        f"Thank you for registering with Videoflix. To complete your registration "
+        f"and verify your email address, please click the link below:\n\n"
         f"{activation_link}\n\n"
-        f"Viele Grüße,\nDein Videoflix-Team"
+        f"If you did not create an account with us, please disregard this email.\n\n"
+        f"Best regards,\nYour Videoflix Team."
     )
-    email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    html_body = render_to_string('auth_app/emails/activation_email.html', {
+        'user_name': user_name,
+        'activation_link': activation_link,
+    })
+    email = EmailMultiAlternatives(subject, text_body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    email.attach_alternative(html_body, 'text/html')
     email.send(fail_silently=False)
 
 def send_activation_email(user, uidb64, token):
