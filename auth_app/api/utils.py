@@ -74,7 +74,7 @@ def _send_password_reset_email_task(user_id, uidb64, token):
         Exception: If email sending fails (fail_silently=False).
     """
     user = User.objects.get(pk=user_id)
-    reset_link = f"{settings.DOMAIN}/api/password_confirm/{uidb64}/{token}/"
+    reset_link = f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_RESET_PASSWORD_PATH}?uid={uidb64}&token={token}"
     subject = 'Passwort zurücksetzen - Videoflix'
     body = (
         f"Hallo, \n\n"

@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-from django.shortcuts import redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
@@ -12,19 +11,6 @@ from .serializers import RegistrationSerializer, LoginSerializer, PasswordResetS
 from .utils import send_activation_email, send_password_reset_email, decode_uid_and_get_user
 from .cookie_utils import CookieMixin
 from .token_utils import blacklist_refresh_token, generate_access_token, get_token_error_response
-
-class HtmlRequestMixin:
-    def _wants_html(self, request):
-        """
-        Check if the client accepts HTML responses.
-        Examines the HTTP Accept header to determine if HTML is acceptable.
-        Args:
-            request (Request): HTTP request object.
-        Returns:
-            bool: True if 'text/html' is in Accept header, False otherwise.
-        """
-        accept = request.META.get('HTTP_ACCEPT', '')
-        return 'text/html' in accept
 
 class RegistrationView(APIView):
     """
@@ -310,7 +296,7 @@ class PasswordResetView(APIView):
         )
 
 
-class PasswordResetConfirmView(HtmlRequestMixin, APIView):
+class PasswordResetConfirmView(APIView):
     """
     API view for confirming password reset with new password.
     Handles POST requests to validate reset token and update user password.
@@ -370,33 +356,6 @@ class PasswordResetConfirmView(HtmlRequestMixin, APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self._update_password(user, serializer.validated_data['new_password'])
-
-    def get(self, request, uidb64, token):
-        """
-        Handle password reset GET request.
-        Validates the user and reset token before redirecting HTML clients to the
-        frontend password reset page.
-        Args:
-            request (Request): HTTP request object.
-            uidb64 (str): Base64-encoded user ID from the reset link.
-            token (str): Reset token from the reset link.
-        Returns:
-            Response: Redirect to frontend reset page (with uid and token as query
-            params) if HTML client and token is valid, HTTP 200 with confirmation
-            message for API clients, or HTTP 400 if the user is invalid or the
-            token is expired.
-        """
-        user, error_response = self._get_validated_reset_user(uidb64, token)
-        if error_response:
-            return error_response
-        if self._wants_html(request):
-            return redirect(
-                f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_RESET_PASSWORD_PATH}?uid={uidb64}&token={token}"
-            )
-        return Response(
-            {'detail': 'Token is valid. Use POST to reset your password.'},
-            status=status.HTTP_200_OK
-        )
 
     def post(self, request, uidb64, token):
         """
