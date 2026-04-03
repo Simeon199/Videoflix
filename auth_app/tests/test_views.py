@@ -182,16 +182,16 @@ class TestActivationView:
         response = api_client.get(url)
         assert response.status_code == 400
 
-    def test_successfull_activation_redirects_browser(self, api_client, create_user):
+    def test_successfull_activation_with_html_accept_header(self, api_client, create_user):
         """
-        Test that browser clients receive a redirect after successful activation.
-        Verifies that when Accept header includes text/html, activation redirects to login page
-        and the user is activated.
+        Test that browser clients receive the same JSON response as API clients.
+        The activation link now points directly to the frontend, so the backend
+        always returns JSON regardless of the Accept header.
         """
         user = create_user(email="browser@example.com", is_active=False)
         url = _build_activation_url(user)
         response = api_client.get(url, HTTP_ACCEPT="text/html")
-        assert response.status_code == 302
-        assert settings.FRONTEND_ACTIVATION_PAGE in response["Location"]
+        assert response.status_code == 200
+        assert response.data["message"] == "Account successfully activated."
         user.refresh_from_db()
         assert user.is_active is True

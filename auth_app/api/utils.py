@@ -35,7 +35,7 @@ def _send_activation_email_task(user_id, uidb64, token):
         Exception: If email sending fails (fail_silently=False).
     """
     user = User.objects.get(pk=user_id)
-    activation_link = f"{settings.DOMAIN}/api/activate/{uidb64}/{token}/"
+    activation_link = f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_ACTIVATION_PAGE}?uid={uidb64}&token={token}"
     subject = 'Aktiviere dein Videoflix-Konto'
     body = (
         f"Hallo, \n\n"

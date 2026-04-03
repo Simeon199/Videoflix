@@ -66,7 +66,7 @@ class RegistrationView(APIView):
         return self._build_user_response(user, token)
 
 
-class ActivationView(HtmlRequestMixin, APIView):
+class ActivationView(APIView):
     """
     API view for user account activation.
     Handles GET requests to activate user accounts using tokens.
@@ -127,25 +127,20 @@ class ActivationView(HtmlRequestMixin, APIView):
     def get(self, request, uidb64, token):
         """
         Handle account activation GET request.
-        Validates the user and activation token, activates the account on success,
-        and redirects HTML clients to the frontend activation page.
+        Validates the user and activation token, activates the account on success.
+        Called by the frontend activation page via JS fetch.
         Args:
             request (Request): HTTP request object.
             uidb64 (str): Base64-encoded user ID from the activation link.
             token (str): Activation token from the activation link.
         Returns:
-            Response: Redirect to frontend activation page if HTML client and activation
-            successful, HTTP 200 with success message for API clients, or HTTP 400
-            if the user is invalid or the token check fails.
+            Response: HTTP 200 with success message on successful activation,
+            or HTTP 400 if the user is invalid or the token check fails.
         """
         user = self._get_validated_user(uidb64)
         if not user:
             return self._activation_error()
         if self._activate_user(user, token):
-            if self._wants_html(request):
-                return redirect(
-                    f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_ACTIVATION_PAGE}"
-                )
             return Response(
                 {'message': 'Account successfully activated.'},
                 status=status.HTTP_200_OK
