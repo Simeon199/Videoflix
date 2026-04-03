@@ -85,16 +85,21 @@ def _send_password_reset_email_task(user_id, uidb64, token):
     """
     user = User.objects.get(pk=user_id)
     reset_link = f"{settings.FRONTEND_DOMAIN}{settings.FRONTEND_RESET_PASSWORD_PATH}?uid={uidb64}&token={token}"
-    subject = 'Passwort zurücksetzen - Videoflix'
-    body = (
-        f"Hallo, \n\n"
-        f"du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt.\n\n"
-        f"Klicke auf den folgenden Link, um ein neues Passwort zu vergeben:\n\n"
+    subject = 'Reset your Password'
+    text_body = (
+        f"Hello,\n\n"
+        f"We recently received a request to reset your password. If you made this "
+        f"request, please click on the following link to reset your password:\n\n"
         f"{reset_link}\n\n"
-        f"Falls du diese Anfrage nicht gestellt hast, kannst du diese Email ignorieren.\n\n"
-        f"Viele Grüße,\nDein Videoflix-Team"
+        f"Please note that for security reasons, this link is only valid for 24 hours.\n\n"
+        f"If you did not request a password reset, please ignore this email.\n\n"
+        f"Best regards,\nYour Videoflix team!"
     )
-    email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    html_body = render_to_string('auth_app/emails/password_reset_email.html', {
+        'reset_link': reset_link,
+    })
+    email = EmailMultiAlternatives(subject, text_body, settings.DEFAULT_FROM_EMAIL, [user.email])
+    email.attach_alternative(html_body, 'text/html')
     email.send(fail_silently=False)
 
 def send_password_reset_email(user, uidb64, token):
